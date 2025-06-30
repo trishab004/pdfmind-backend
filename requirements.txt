@@ -1,6 +1,5 @@
 flask
 flask-cors
-transformers
-torch
 pymupdf
+requests
 gunicorn
