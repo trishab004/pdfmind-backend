@@ -1,17 +1,20 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import fitz  # PyMuPDF
-from transformers import pipeline
-import os
+import requests
 
 app = Flask(__name__)
 CORS(app)
 
-# Lightweight models for Render 512MB
-summarizer = pipeline("summarization", model="sshleifer/distilbart-cnn-12-6")
-qa_pipeline = pipeline("question-answering", model="distilbert-base-uncased-distilled-squad")
-
 pdf_text_cache = ""
+
+# Hugging Face endpoints (FREE)
+SUMMARIZER_API = "https://api-inference.huggingface.co/models/sshleifer/distilbart-cnn-12-6"
+QNA_API = "https://api-inference.huggingface.co/models/distilbert-base-cased-distilled-squad"
+
+headers = {
+    "Authorization": "Bearer YOUR_HF_TOKEN"  # Optional — you can skip if you don't have one
+}
 
 @app.route('/summarize', methods=['POST'])
 def summarize_pdf():
@@ -23,33 +26,45 @@ def summarize_pdf():
         text += page.get_text()
     pdf_text_cache = text
 
-    chunks = [text[i:i+1000] for i in range(0, len(text), 1000)]
-    summary = ""
-    for chunk in chunks:
-        try:
-            result = summarizer(chunk, max_length=130, min_length=30, do_sample=False)
-            summary += result[0]['summary_text'] + "\n"
-        except:
-            continue
+    # Trim text to 1000 chars (API limit)
+    chunk = text[:1000]
 
-    return jsonify({'summary': summary})
+    payload = {
+        "inputs": chunk
+    }
+
+    response = requests.post(SUMMARIZER_API, headers=headers, json=payload)
+
+    if response.status_code == 200:
+        summary = response.json()[0]['summary_text']
+        return jsonify({'summary': summary})
+    else:
+        return jsonify({'summary': "Error generating summary."})
 
 @app.route('/ask', methods=['POST'])
 def ask_pdf():
     global pdf_text_cache
     question = request.json['question']
+
     if not pdf_text_cache.strip():
         return jsonify({'answer': "Please upload a PDF first."})
-    try:
-        result = qa_pipeline({
-            'question': question,
-            'context': pdf_text_cache[:4000]
-        })
-        return jsonify({'answer': result['answer']})
-    except Exception as e:
+
+    payload = {
+        "inputs": {
+            "question": question,
+            "context": pdf_text_cache[:2000]  # limited for API
+        }
+    }
+
+    response = requests.post(QNA_API, headers=headers, json=payload)
+
+    if response.status_code == 200:
+        answer = response.json()['answer']
+        return jsonify({'answer': answer})
+    else:
         return jsonify({'answer': "Error processing your question."})
 
-# Proper port for Render (uses env variable)
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(debug=False, host='0.0.0.0', port=port)
+    import os
+    port = int(os.environ.get("PORT", 5000))
+    app.run(debug=False, host="0.0.0.0", port=port)
