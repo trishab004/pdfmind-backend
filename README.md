@@ -28,6 +28,23 @@ Deployed seamlessly via [Render](https://render.com), this service powers the fr
 
 ---
 
+## 🧪 Tech Stack
+Python 3.10+
+
+Flask
+
+Flask-CORS
+
+PyMuPDF (fitz)
+
+Requests
+
+Hugging Face Transformers API
+
+Render (Deployment Platform)
+
+---
+
 ## 📂 API Endpoints
 
 ### `POST /summarize`
@@ -43,3 +60,6 @@ Accepts a PDF file and returns an AI-generated summary.
 {
   "summary": "This is the summary of the uploaded document."
 }
+
+
+
