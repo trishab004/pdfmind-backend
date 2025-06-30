@@ -50,6 +50,7 @@ def summarize_pdf():
 
 @app.route('/ask', methods=['POST'])
 def ask_pdf():
+    print("🗣 Received /ask request")
     global pdf_text_cache
     question = request.json.get('question', '')
 
