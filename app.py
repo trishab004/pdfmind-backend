@@ -11,7 +11,9 @@ pdf_text_cache = ""
 
 # Hugging Face public endpoints (no token)
 SUMMARIZER_API = "https://api-inference.huggingface.co/models/sshleifer/distilbart-cnn-12-6"
-QNA_API = "https://api-inference.huggingface.co/models/distilbert-base-cased-distilled-squad"
+QNA_API = "https://api-inference.huggingface.co/models/deepset/roberta-base-squad2"
+
+#QNA_API = "https://api-inference.huggingface.co/models/distilbert-base-cased-distilled-squad"
 
 headers = {
     "Authorization": f"Bearer {os.environ.get('HF_TOKEN')}"
