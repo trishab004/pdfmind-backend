@@ -13,7 +13,9 @@ pdf_text_cache = ""
 SUMMARIZER_API = "https://api-inference.huggingface.co/models/sshleifer/distilbart-cnn-12-6"
 QNA_API = "https://api-inference.huggingface.co/models/distilbert-base-cased-distilled-squad"
 
-headers = {}  # No Authorization header needed for public models
+headers = {
+    "Authorization": f"Bearer {os.environ.get('HF_TOKEN')}"
+}
 
 @app.route('/summarize', methods=['POST'])
 def summarize_pdf():
