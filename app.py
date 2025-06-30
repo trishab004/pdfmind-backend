@@ -2,14 +2,14 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import fitz  # PyMuPDF
 from transformers import pipeline
-import torch
+import os
 
 app = Flask(__name__)
 CORS(app)
 
-# Load free AI models
+# Lightweight models for Render 512MB
 summarizer = pipeline("summarization", model="sshleifer/distilbart-cnn-12-6")
-qa_pipeline = pipeline("question-answering", model="distilbert-base-cased-distilled-squad")
+qa_pipeline = pipeline("question-answering", model="distilbert-base-uncased-distilled-squad")
 
 pdf_text_cache = ""
 
@@ -27,10 +27,9 @@ def summarize_pdf():
     summary = ""
     for chunk in chunks:
         try:
-            result = summarizer(chunk, max_length=150, min_length=40, do_sample=False)
+            result = summarizer(chunk, max_length=130, min_length=30, do_sample=False)
             summary += result[0]['summary_text'] + "\n"
-        except Exception as e:
-            print("Summarizer error:", e)
+        except:
             continue
 
     return jsonify({'summary': summary})
@@ -48,8 +47,9 @@ def ask_pdf():
         })
         return jsonify({'answer': result['answer']})
     except Exception as e:
-        print("QnA error:", e)
-        return jsonify({'answer': "Something went wrong answering your question."})
+        return jsonify({'answer': "Error processing your question."})
 
+# Proper port for Render (uses env variable)
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(debug=False, host='0.0.0.0', port=port)
